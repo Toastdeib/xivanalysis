@@ -5,7 +5,7 @@ import ACTIONS from 'data/ACTIONS'
 import STATUSES from 'data/STATUSES'
 import Module from 'parser/core/Module'
 import {Rule, Requirement} from 'parser/core/modules/Checklist'
-import {Suggestion, SEVERITY} from 'parser/core/modules/Suggestions'
+import {TieredSuggestion, SEVERITY} from 'parser/core/modules/Suggestions'
 
 // Can never be too careful :blobsweat:
 const STATUS_DURATION = {
@@ -96,12 +96,17 @@ export default class DoTs extends Module {
 
 		// Suggestion for DoT clipping
 		const maxClip = Math.max(...Object.values(this._clip))
-		this.suggestions.add(new Suggestion({
+		this.suggestions.add(new TieredSuggestion({
 			icon: ACTIONS.BIO.icon,
 			content: <Fragment>
 				Avoid refreshing DoTs significantly before their expiration, except when at the end of the fight. Unnecessary refreshes use up your mana more than necessary, and may cause you to go out of mana.
 			</Fragment>,
-			severity: maxClip < 10000? SEVERITY.MINOR : maxClip < 30000? SEVERITY.MEDIUM : SEVERITY.MAJOR,
+			tiers: {
+				1000: SEVERITY.MINOR,
+				10000: SEVERITY.MEDIUM,
+				30000: SEVERITY.MAJOR,
+			},
+			value: maxClip,
 			why: <Fragment>
 				{this.parser.formatDuration(this._clip[STATUSES.BIO_II.id])} of {STATUSES[STATUSES.BIO_II.id].name} and {this.parser.formatDuration(this._clip[STATUSES.MIASMA.id])} of {STATUSES[STATUSES.MIASMA.id].name} lost to early refreshes.
 			</Fragment>,
